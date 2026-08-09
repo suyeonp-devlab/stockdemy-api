@@ -1,0 +1,20 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+jwt:
+  secret: change-this-to-any-random-string-at-least-32-bytes-long
+  access-token-validity-seconds: 1800
+  refresh-token-validity-seconds: 1209600
+
+# 주식 데이터
+market-data:
+  provider: dummy
+
+# 배치
+schedule:
+  news: # 매일 07시 뉴스 수집
+    cron: "0 0 7 * * *"

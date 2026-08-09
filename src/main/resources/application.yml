@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: stockdemy-api
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+
+jwt:
+  access-token-validity-seconds: 1800       # 30분
+  refresh-token-validity-seconds: 1209600   # 14일
+
+# 주식 데이터
+market-data:
+  provider: dummy
+  sync-interval-ms: 5000
+
+# DART API (공시)
+dart:
+  api-key: ${DART_API_KEY:}
+
+# 네이버 뉴스 API
+naver:
+  client-id: ${NAVER_CLIENT_ID:}
+  client-secret: ${NAVER_CLIENT_SECRET:}
+
+# Gemini API
+ai:
+  gemini:
+    api-key: ${GEMINI_API_KEY:}
+    model: gemini-2.5-flash
+
+# 배치
+schedule:
+  news: # 매일 07시 뉴스 수집
+    cron: "0 0 7 * * *"
