@@ -1,6 +1,6 @@
 CREATE TABLE users (
   user_id                 BIGSERIAL PRIMARY KEY,
-  email                   VARCHAR(255) NOT NULL,
+  email                   VARCHAR(255),
   password                VARCHAR(255),
   token_version           INTEGER NOT NULL,
   status                  VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
@@ -9,7 +9,7 @@ CREATE TABLE users (
   withdrawn_at            TIMESTAMP,
   password_changed_at     TIMESTAMP,
   last_login_at           TIMESTAMP,
-  created_at              TIMESTAMP,
+  created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at              TIMESTAMP
 );
 
@@ -20,9 +20,9 @@ COMMENT ON COLUMN users.user_id IS '사용자 ID';
 COMMENT ON COLUMN users.email IS '이메일';
 COMMENT ON COLUMN users.password IS '비밀번호';
 COMMENT ON COLUMN users.token_version IS '토큰 버전';
-COMMENT ON COLUMN users.status IS '회원 상태';
+COMMENT ON COLUMN users.status IS '회원 상태 (USER_STATUS)';
 COMMENT ON COLUMN users.failed_login_attempts IS '비밀번호 연속 실패 횟수';
-COMMENT ON COLUMN users.provider IS '가입 경로';
+COMMENT ON COLUMN users.provider IS '가입 경로 (USER_PROVIDER)';
 COMMENT ON COLUMN users.withdrawn_at IS '탈퇴일시';
 COMMENT ON COLUMN users.password_changed_at IS '비밀번호 변경일시';
 COMMENT ON COLUMN users.last_login_at IS '마지막 로그인 일시';
@@ -34,7 +34,7 @@ CREATE TABLE code_groups (
   group_name   VARCHAR(255) NOT NULL,
   group_desc   VARCHAR(255),
   enabled      BOOLEAN NOT NULL,
-  created_at   TIMESTAMP,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at   TIMESTAMP
 );
 
@@ -56,7 +56,7 @@ CREATE TABLE codes (
   param1       VARCHAR(255),
   param2       VARCHAR(255),
   param3       VARCHAR(255),
-  created_at   TIMESTAMP,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at   TIMESTAMP,
   CONSTRAINT uk_codes_group_code UNIQUE (group_id, code_value)
 );
@@ -97,16 +97,16 @@ CREATE TABLE stocks (
   last_market_cap      BIGINT,
   last_volume          BIGINT,
   last_synced_at       TIMESTAMP,
-  created_at           TIMESTAMP,
+  created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at           TIMESTAMP
 );
 
 COMMENT ON TABLE stocks IS '종목 정보';
 COMMENT ON COLUMN stocks.stock_code IS '종목 코드';
 COMMENT ON COLUMN stocks.stock_name IS '종목명';
-COMMENT ON COLUMN stocks.market IS '시장 구분';
-COMMENT ON COLUMN stocks.sector IS '업종';
-COMMENT ON COLUMN stocks.sentiment IS 'AI 신호';
+COMMENT ON COLUMN stocks.market IS '시장 구분 (STOCK_MARKET)';
+COMMENT ON COLUMN stocks.sector IS '업종 (STOCK_SECTOR)';
+COMMENT ON COLUMN stocks.sentiment IS 'AI 신호 (AI_SENTIMENT)';
 COMMENT ON COLUMN stocks.prev_close IS '전일 종가';
 COMMENT ON COLUMN stocks.week52_high IS '52주 최고가';
 COMMENT ON COLUMN stocks.week52_low IS '52주 최저가';
@@ -129,7 +129,7 @@ CREATE TABLE user_favorite_stocks (
   favorite_id     BIGSERIAL PRIMARY KEY,
   user_id         BIGINT NOT NULL,
   stock_code      VARCHAR(20) NOT NULL,
-  created_at      TIMESTAMP,
+  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at      TIMESTAMP,
   CONSTRAINT uk_user_favorite_stocks_user_stock UNIQUE (user_id, stock_code)
 );
@@ -181,7 +181,7 @@ CREATE TABLE news (
   source_name    VARCHAR(255),
   confidence     INTEGER,
   reasoning      TEXT,
-  created_at     TIMESTAMP,
+  created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at     TIMESTAMP,
   CONSTRAINT uk_news_source_url UNIQUE (source_url)
 );
@@ -196,8 +196,8 @@ COMMENT ON COLUMN news.stock_code IS '종목 코드';
 COMMENT ON COLUMN news.title IS '제목';
 COMMENT ON COLUMN news.summary IS '요약';
 COMMENT ON COLUMN news.published_at IS '발행일시';
-COMMENT ON COLUMN news.category IS '카테고리';
-COMMENT ON COLUMN news.sentiment IS 'AI 신호';
+COMMENT ON COLUMN news.category IS '카테고리 (NEWS_CATEGORY)';
+COMMENT ON COLUMN news.sentiment IS 'AI 신호 (AI_SENTIMENT)';
 COMMENT ON COLUMN news.source_url IS '원문 URL';
 COMMENT ON COLUMN news.source_name IS '언론사명';
 COMMENT ON COLUMN news.confidence IS 'AI 신호 퍼센트';
@@ -209,7 +209,9 @@ CREATE TABLE news_related_stocks (
   related_id   BIGSERIAL PRIMARY KEY,
   news_id      BIGINT NOT NULL,
   stock_code   VARCHAR(20) NOT NULL,
-  impact       VARCHAR(20)
+  impact       VARCHAR(20),
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP
 );
 
 CREATE INDEX idx_news_related_stocks_news_id ON news_related_stocks (news_id);
@@ -218,7 +220,9 @@ COMMENT ON TABLE news_related_stocks IS '뉴스 관련 종목 매핑';
 COMMENT ON COLUMN news_related_stocks.related_id IS '뉴스 관련 종목 매핑 ID';
 COMMENT ON COLUMN news_related_stocks.news_id IS '뉴스 ID';
 COMMENT ON COLUMN news_related_stocks.stock_code IS '종목 코드';
-COMMENT ON COLUMN news_related_stocks.impact IS '영향';
+COMMENT ON COLUMN news_related_stocks.impact IS '영향 (NEWS_IMPACT)';
+COMMENT ON COLUMN news_related_stocks.created_at IS '생성일시';
+COMMENT ON COLUMN news_related_stocks.updated_at IS '수정일시';
 
 CREATE TABLE journals (
   journal_id   BIGSERIAL PRIMARY KEY,
@@ -234,7 +238,7 @@ CREATE TABLE journals (
   quantity     INTEGER NOT NULL,
   memo         TEXT,
   ai_comment   TEXT,
-  created_at   TIMESTAMP,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at   TIMESTAMP
 );
 
@@ -244,10 +248,10 @@ COMMENT ON TABLE journals IS '매매일지';
 COMMENT ON COLUMN journals.journal_id IS '매매일지 ID';
 COMMENT ON COLUMN journals.user_id IS '사용자 ID';
 COMMENT ON COLUMN journals.stock_code IS '종목 코드';
-COMMENT ON COLUMN journals.status IS '매매 상태';
-COMMENT ON COLUMN journals.market IS '시장 구분';
-COMMENT ON COLUMN journals.sector IS '업종';
-COMMENT ON COLUMN journals.trade_type IS '매매 구분';
+COMMENT ON COLUMN journals.status IS '분석 상태 (JOURNAL_STATUS)';
+COMMENT ON COLUMN journals.market IS '시장 구분 (STOCK_MARKET)';
+COMMENT ON COLUMN journals.sector IS '업종 (STOCK_SECTOR)';
+COMMENT ON COLUMN journals.trade_type IS '매매 구분 (TRADE_TYPE)';
 COMMENT ON COLUMN journals.trade_date IS '매매일';
 COMMENT ON COLUMN journals.trade_time IS '매매 시각';
 COMMENT ON COLUMN journals.price IS '매매 단가';

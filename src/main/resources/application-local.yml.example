@@ -21,3 +21,6 @@ logging:
 
 jwt:
   secret: change-this-to-any-random-string-at-least-32-bytes-long
+
+cors:
+  allowed-origins: http://localhost:3000
