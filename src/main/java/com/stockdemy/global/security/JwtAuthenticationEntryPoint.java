@@ -1,6 +1,5 @@
 package com.stockdemy.global.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stockdemy.global.exception.ErrorCode;
 import com.stockdemy.global.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 /** JWT 인증 실패 시 처리 (401) */
 @Component
