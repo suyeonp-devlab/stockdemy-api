@@ -32,13 +32,13 @@ public class SecurityConfig {
   // 공개 API
   private static final String[] PUBLIC_PATHS = {
     "/api/auth/**",
-    "/api/common-codes/**",
     "/swagger-ui/**",
     "/v3/api-docs/**",
   };
 
   // 조회성 공개 API
   private static final String[] PUBLIC_GET_PATHS = {
+    "/api/codes/**",
     "/api/stocks/**",
     "/api/news/**",
     "/api/market/**",
