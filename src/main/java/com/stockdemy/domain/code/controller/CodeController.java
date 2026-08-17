@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "공통코드", description = "공통 코드 관련 API")
 @RestController
-@RequestMapping("/api/common-codes")
+@RequestMapping("/api/codes")
 @RequiredArgsConstructor
 public class CodeController {
 
