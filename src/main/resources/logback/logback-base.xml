@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <included>
 
+  <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+
   <property name="LOG_PATH" value="./logs"/>
 
   <property name="CONSOLE_PATTERN"
