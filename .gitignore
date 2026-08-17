@@ -42,3 +42,6 @@ out/
 
 ### Application ###
 application-local.yml
+
+### Logs ###
+logs/

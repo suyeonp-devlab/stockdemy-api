@@ -25,6 +25,7 @@ market-data:
   provider: yahoo
 
 logging:
+  config: classpath:logback/logback-dev.xml
   level:
     org.hibernate.SQL: debug
     com.stockdemy: debug

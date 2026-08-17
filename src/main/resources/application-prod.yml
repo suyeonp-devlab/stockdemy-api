@@ -25,5 +25,6 @@ market-data:
   provider: yahoo
 
 logging:
+  config: classpath:logback/logback-prod.xml
   level:
     org.hibernate.SQL: warn

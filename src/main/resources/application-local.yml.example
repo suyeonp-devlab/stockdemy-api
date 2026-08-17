@@ -16,8 +16,10 @@ spring:
       port: 6379
 
 logging:
+  config: classpath:logback/logback-local.xml
   level:
     org.hibernate.SQL: debug
+    com.stockdemy: debug
 
 jwt:
   secret: change-this-to-any-random-string-at-least-32-bytes-long
