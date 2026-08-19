@@ -36,6 +36,11 @@ ai:
     api-key: ${GEMINI_API_KEY:}
     model: gemini-2.5-flash
 
+# Resend
+resend:
+  api-key: ${RESEND_API_KEY:}
+  from-address: ${RESEND_FROM_ADDRESS:}
+
 # 배치
 schedule:
   news: # 매일 07시 뉴스 수집
