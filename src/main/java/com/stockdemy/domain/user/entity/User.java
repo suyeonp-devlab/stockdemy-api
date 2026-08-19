@@ -109,4 +109,14 @@ public class User extends BaseTimeEntity {
   public void recordLoginFailure() {
     this.failedLoginAttempts++;
   }
+
+  // 토큰 버전 증가
+  public void increaseTokenVersion() {
+    this.tokenVersion++;
+  }
+
+  // 탈퇴 여부
+  public boolean isWithdrawn() {
+    return "WITHDRAWN".equals(status);
+  }
 }
