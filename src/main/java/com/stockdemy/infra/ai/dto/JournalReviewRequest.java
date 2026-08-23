@@ -8,6 +8,7 @@ import java.time.LocalTime;
 @Builder
 public record JournalReviewRequest(
   String stockCode,
+  String stockName,
   String marketName,
   String tradeTypeName,
   LocalDate tradeDate,

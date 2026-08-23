@@ -7,7 +7,8 @@ import java.util.List;
 @Builder
 public record NewsAnalysisRequest(
   String stockCode,
+  String stockName,
   String title,
   String sourceUrl,
-  List<String> candidateStockCode) {
+  List<NewsCandidateStock> candidateStocks) {
 }

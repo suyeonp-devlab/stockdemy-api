@@ -7,17 +7,16 @@ import java.util.List;
 @Builder
 public record StockAnalysisRequest(
   String stockCode,
+  String stockName,
   String marketName,
   String sectorName,
-  double prevClose,
-  double week52High,
-  double week52Low,
-  int sharesOutstanding,
-  double eps,
-  double bps,
-  double sectorPer,
   double lastPrice,
   double lastChangePercent,
-  int lastVolume,
+  double week52High,
+  double week52Low,
+  double per,
+  double sectorPer,
+  double pbr,
+  long marketCap,
   List<String> newsSourceUrls) {
 }
