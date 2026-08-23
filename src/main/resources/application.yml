@@ -20,6 +20,8 @@ jwt:
 market-data:
   provider: dummy
   sync-interval-ms: 5000
+  fund-sync-interval-ms: 86400000   # 1일
+  fund-refresh-hours: 24
 
 # DART API (공시)
 dart:
