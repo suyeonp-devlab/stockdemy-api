@@ -7,6 +7,7 @@ import com.stockdemy.domain.user.entity.User;
 import com.stockdemy.domain.user.repository.UserRepository;
 import com.stockdemy.global.exception.CustomException;
 import com.stockdemy.global.exception.ErrorCode;
+import com.stockdemy.global.response.ApiResponse;
 import com.stockdemy.global.security.JwtProvider;
 import com.stockdemy.global.security.RateLimiter;
 import com.stockdemy.global.security.RefreshTokenStore;
@@ -17,6 +18,10 @@ import com.stockdemy.global.security.dto.RefreshLookupResult;
 import com.stockdemy.infra.mail.MailSender;
 import com.stockdemy.infra.oauth.GoogleOAuthClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +41,10 @@ public class AuthService {
   private final GoogleOAuthClient googleOAuthClient;
   private final RateLimiter rateLimiter;
 
+  @Value("${jwt.refresh-token-validity-seconds}")
+  private long refreshTokenValiditySeconds;
+
+  public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
   private static final Duration SEND_CODE_COOLDOWN = Duration.ofSeconds(60);   // 연속 발송 최소 간격
   private static final int SEND_CODE_MAX_PER_HOUR = 5;                         // 시간당 최대 발송 횟수
   private static final Duration SEND_CODE_WINDOW = Duration.ofHours(1);        // 발송 횟수 집계 기준 시간
@@ -194,6 +203,35 @@ public class AuthService {
     if (result.status() == RefreshLookupResult.Status.VALID) {
       refreshTokenStore.revokeOne(refreshToken, result.userId());
     }
+  }
+
+  // refresh token cookie 설정 + access token 응답
+  public ResponseEntity<ApiResponse<AuthTokenResponse>> withRefreshCookie(TokenItem tokens, String message) {
+    return ResponseEntity.ok()
+      .header(HttpHeaders.SET_COOKIE, refreshTokenCookie(tokens.refreshToken()).toString())
+      .body(ApiResponse.success(message, new AuthTokenResponse(tokens.accessToken())));
+  }
+
+  // refresh token cookie 설정
+  public ResponseCookie refreshTokenCookie(String token) {
+    return ResponseCookie.from(REFRESH_TOKEN_COOKIE, token)
+      .httpOnly(true)
+      .secure(true)
+      .sameSite("Strict")
+      .path("/")
+      .maxAge(refreshTokenValiditySeconds)
+      .build();
+  }
+
+  // refresh token cookie 무효화
+  public ResponseCookie expiredRefreshTokenCookie() {
+    return ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
+      .httpOnly(true)
+      .secure(true)
+      .sameSite("Strict")
+      .path("/")
+      .maxAge(0)
+      .build();
   }
 
   // 인증코드 발송 제한여부 확인

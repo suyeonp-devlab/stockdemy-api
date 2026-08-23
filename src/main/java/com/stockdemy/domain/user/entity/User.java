@@ -119,4 +119,9 @@ public class User extends BaseTimeEntity {
   public boolean isWithdrawn() {
     return "WITHDRAWN".equals(status);
   }
+
+  // 구글 회원 여부
+  public boolean isGoogleUser() {
+    return "GOOGLE".equals(provider);
+  }
 }
