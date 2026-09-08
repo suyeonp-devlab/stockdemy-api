@@ -77,7 +77,6 @@ INSERT INTO stocks (stock_code, stock_name, market, sector, created_at) VALUES
 
   ('012450', '한화에어로스페이스', 'KOSPI', 'MACHINERY', CURRENT_TIMESTAMP),
   ('034020', '두산에너빌리티', 'KOSPI', 'MACHINERY', CURRENT_TIMESTAMP),
-  ('042670', 'HD현대인프라코어', 'KOSPI', 'MACHINERY', CURRENT_TIMESTAMP),
   ('267270', 'HD현대건설기계', 'KOSPI', 'MACHINERY', CURRENT_TIMESTAMP),
 
   ('015760', '한국전력', 'KOSPI', 'ELECTRIC_GAS', CURRENT_TIMESTAMP),
