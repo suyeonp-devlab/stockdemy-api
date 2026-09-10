@@ -8,6 +8,8 @@ import com.stockdemy.domain.code.repository.CodeGroupRepository;
 import com.stockdemy.global.exception.CustomException;
 import com.stockdemy.global.exception.ErrorCode;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,5 +51,14 @@ public class CodeService {
       .filter(code -> codeValue.equals(code.getCodeValue()))
       .map(Code::getCodeName)
       .findFirst().orElse(null);
+  }
+
+  // 공통코드명 맵 조회 (코드값 → 코드명, 여러 건 변환 시 그룹을 한 번만 조회)
+  public Map<String, String> getCodeNameMap(String groupId) {
+
+    return codeGroupRepository.findByGroupIdAndEnabled(groupId, true)
+      .map(group -> group.getCodes().stream()
+        .collect(Collectors.toMap(Code::getCodeValue, Code::getCodeName, (first, second) -> first)))
+      .orElse(Map.of());
   }
 }
