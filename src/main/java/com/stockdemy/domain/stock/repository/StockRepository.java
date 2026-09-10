@@ -16,4 +16,7 @@ public interface StockRepository extends JpaRepository<Stock, String> {
   // 초기 적재가 끝난 시장별 종목 코드 (초기 적재 대상은 백필 러너가 전담)
   @Query("SELECT s.stockCode FROM Stock s WHERE s.market = :market AND s.lastSyncedAt IS NOT NULL ORDER BY s.stockCode")
   List<String> findSyncedCodesByMarket(@Param("market") String market);
+
+  // 시장별 종목
+  List<Stock> findByMarket(String market);
 }

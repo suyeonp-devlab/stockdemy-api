@@ -111,7 +111,7 @@ public class YahooMarketDataProvider implements MarketDataProvider {
   private ChartResult fetchChart(String symbol, String interval, String range, Long period1, Long period2) {
 
     try {
-      UriComponentsBuilder uri = UriComponentsBuilder.fromPath(CHART_PATH).queryParam("interval", interval);
+      UriComponentsBuilder uri = UriComponentsBuilder.fromUriString(BASE_URL + CHART_PATH).queryParam("interval", interval);
 
       if (range != null) {
         uri.queryParam("range", range);
@@ -119,9 +119,10 @@ public class YahooMarketDataProvider implements MarketDataProvider {
         uri.queryParam("period1", period1).queryParam("period2", period2);
       }
 
-      // 지수 심볼(^KS11)과 환율 심볼(KRW=X)에 URI 예약문자가 들어가므로 확장 후 인코딩한다
+      // 지수 심볼(^KS11)은 한 번만 인코딩해야 한다. 문자열로 넘기면 RestClient가 템플릿으로 보고
+      // 다시 인코딩해 %255E가 되므로, 인코딩을 끝낸 절대 URI 객체로 넘긴다
       ChartResponse response = restClient.get()
-        .uri(uri.buildAndExpand(symbol).encode().toUriString())
+        .uri(uri.buildAndExpand(symbol).encode().toUri())
         .retrieve()
         .body(ChartResponse.class);
 

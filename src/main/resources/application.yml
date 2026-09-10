@@ -8,6 +8,10 @@ spring:
         format_sql: true
   jackson:
     default-property-inclusion: non_null
+  task:
+    scheduling:
+      pool:
+        size: 3                     # 장중 시세, 장마감 배치, 지수 갱신이 서로 기다리지 않도록
 
 server:
   port: 8080
@@ -22,6 +26,8 @@ market-data:
   sync-interval-ms: 30000           # 장중 시세 갱신 사이클 종료 후 대기
   sync-initial-delay-ms: 60000      # 기동 직후 초기 적재와 겹치지 않도록 지연
   call-interval-ms: 250             # Yahoo 연속 호출 간격
+  index-sync-interval-ms: 30000     # 지수·환율 갱신 종료 후 대기
+  index-sync-initial-delay-ms: 5000 # 기동 직후 첫 지수 갱신
   close:                            # MarketSession.settleTime(종가 확정 시각)과 맞출 것
     krx-cron: "0 10 18 * * MON-FRI"     # KRX 장마감 처리 (Asia/Seoul, 지연 시세 확정 이후)
     nasdaq-cron: "0 30 16 * * MON-FRI"  # NASDAQ 장마감 처리 (America/New_York)
