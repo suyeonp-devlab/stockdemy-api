@@ -2,11 +2,14 @@ package com.stockdemy.domain.stock.service;
 
 import com.stockdemy.domain.code.service.CodeService;
 import com.stockdemy.domain.stock.dto.FavoriteRequest;
+import com.stockdemy.domain.stock.dto.PriceBarItem;
+import com.stockdemy.domain.stock.dto.StockFundamentalsResponse;
 import com.stockdemy.domain.stock.dto.StockItem;
 import com.stockdemy.domain.stock.dto.StockListResponse;
 import com.stockdemy.domain.stock.dto.StockQuoteItem;
 import com.stockdemy.domain.stock.dto.StockSearchRequest;
 import com.stockdemy.domain.stock.entity.Stock;
+import com.stockdemy.domain.stock.repository.PriceBarRepository;
 import com.stockdemy.domain.stock.repository.StockQueryRepository;
 import com.stockdemy.domain.stock.repository.StockRepository;
 import com.stockdemy.domain.stock.repository.UserFavoriteStockRepository;
@@ -27,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.stockdemy.global.util.NumberUtil.round2;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -40,6 +45,7 @@ public class StockService {
 
   private final StockRepository stockRepository;
   private final StockQueryRepository stockQueryRepository;
+  private final PriceBarRepository priceBarRepository;
   private final UserFavoriteStockRepository userFavoriteStockRepository;
   private final StockQuoteStore stockQuoteStore;
   private final CodeService codeService;
@@ -138,6 +144,49 @@ public class StockService {
       .toList();
   }
 
+  // 종목 기초데이터 조회
+  public StockFundamentalsResponse getFundamentals(String stockCode, Long userId) {
+
+    Stock stock = stockRepository.findById(stockCode)
+      .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "존재하지 않는 종목입니다."));
+
+    boolean favorite = userId != null && userFavoriteStockRepository.existsByUserIdAndStockCode(userId, stockCode);
+
+    return StockFundamentalsResponse.builder()
+      .stockCode(stock.getStockCode())
+      .stockName(stock.getStockName())
+      .market(stock.getMarket())
+      .marketNm(codeService.getCodeName(MARKET_GROUP, stock.getMarket()))
+      .sector(stock.getSector())
+      .sectorNm(codeService.getCodeName(SECTOR_GROUP, stock.getSector()))
+      .sentiment(stock.getSentiment())
+      .sentimentNm(codeService.getCodeName(SENTIMENT_GROUP, stock.getSentiment()))
+      .favorite(favorite)
+      .aiComment(stock.getAiComment())
+      .prevClose(round2(stock.getPrevClose()))
+      .week52High(round2(stock.getWeek52High()))
+      .week52Low(round2(stock.getWeek52Low()))
+      .sharesOutstanding(stock.getSharesOutstanding())
+      .foreignOwnership(stock.getForeignOwnership())
+      .eps(stock.getEps())
+      .bps(stock.getBps())
+      .annualDividend(stock.getAnnualDividend())
+      .sectorPer(stock.getSectorPer())
+      .build();
+  }
+
+  // 일봉 조회 (DB에 적재된 확정 봉, 당일 진행 중인 봉은 실시간 시세 API가 제공)
+  public List<PriceBarItem> getPriceBars(String stockCode) {
+
+    if (!stockRepository.existsById(stockCode)) {
+      throw new CustomException(ErrorCode.NOT_FOUND, "존재하지 않는 종목입니다.");
+    }
+
+    return priceBarRepository.findByStockCodeOrderByBarDateAsc(stockCode).stream()
+      .map(PriceBarItem::from)
+      .toList();
+  }
+
   // 관심종목 등록/해제 (이미 같은 상태면 그대로 성공)
   @Transactional
   public void updateFavorite(Long userId, FavoriteRequest request) {
@@ -183,11 +232,6 @@ public class StockService {
       log.warn("시세 캐시 조회 실패, DB 값으로 대체합니다: {}", e.getMessage());
       return Map.of();
     }
-  }
-
-  // 앱이 등락률을 받은 그대로 출력하므로 소수 둘째 자리로 맞춘다
-  private Double round2(Double value) {
-    return value == null ? null : Math.round(value * 100) / 100.0;
   }
 
   private record LiveQuote(Double price, Double changePercent, long volume) {

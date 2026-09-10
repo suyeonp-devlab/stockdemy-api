@@ -2,6 +2,7 @@ package com.stockdemy.infra.marketdata;
 
 import com.stockdemy.infra.marketdata.dto.BarItem;
 import com.stockdemy.infra.marketdata.dto.IndexItem;
+import com.stockdemy.infra.marketdata.dto.IntradayItem;
 import com.stockdemy.infra.marketdata.dto.QuoteItem;
 
 import java.util.List;
@@ -21,8 +22,8 @@ public interface MarketDataProvider {
   /** 일봉 조회 (최근 {@code days}일) */
   List<BarItem> fetchDailyBars(String stockCode, String market, int days);
 
-  /** 당일 분봉 조회 */
-  List<BarItem> fetchMinuteBars(String stockCode, String market);
+  /** 당일 시세 + 분봉 조회 (장 시작 전·휴장일에는 최근 거래일 기준) */
+  Optional<IntradayItem> fetchIntraday(String stockCode, String market);
 
   /** 지수·환율 조회 */
   List<IndexItem> fetchIndices();

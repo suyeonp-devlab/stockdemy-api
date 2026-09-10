@@ -15,6 +15,8 @@ public interface UserFavoriteStockRepository extends JpaRepository<UserFavoriteS
   @Query("SELECT f.stockCode FROM UserFavoriteStock f WHERE f.userId = :userId")
   List<String> findStockCodesByUserId(@Param("userId") Long userId);
 
+  boolean existsByUserIdAndStockCode(Long userId, String stockCode);
+
   // 관심종목 등록 (이미 있으면 무시)
   @Modifying
   @Query(value = """

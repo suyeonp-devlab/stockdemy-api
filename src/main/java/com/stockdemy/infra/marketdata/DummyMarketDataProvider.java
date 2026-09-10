@@ -2,6 +2,7 @@ package com.stockdemy.infra.marketdata;
 
 import com.stockdemy.infra.marketdata.dto.BarItem;
 import com.stockdemy.infra.marketdata.dto.IndexItem;
+import com.stockdemy.infra.marketdata.dto.IntradayItem;
 import com.stockdemy.infra.marketdata.dto.QuoteItem;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,9 +76,14 @@ public class DummyMarketDataProvider implements MarketDataProvider {
     return bars;
   }
 
-  // 당일 분봉 조회
+  // 당일 시세 + 분봉 조회
   @Override
-  public List<BarItem> fetchMinuteBars(String stockCode, String market) {
+  public Optional<IntradayItem> fetchIntraday(String stockCode, String market) {
+    return fetchQuote(stockCode, market).map(quote -> new IntradayItem(quote, minuteBars(stockCode, market)));
+  }
+
+  // 당일 분봉 생성 (장 시작 ~ 현재)
+  private List<BarItem> minuteBars(String stockCode, String market) {
 
     LocalDate date = lastTradingDate();
     LocalTime open = MARKET_NASDAQ.equals(market) ? US_OPEN : KRX_OPEN;

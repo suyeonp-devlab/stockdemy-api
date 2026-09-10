@@ -3,6 +3,7 @@ package com.stockdemy.infra.marketdata;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.stockdemy.infra.marketdata.dto.BarItem;
 import com.stockdemy.infra.marketdata.dto.IndexItem;
+import com.stockdemy.infra.marketdata.dto.IntradayItem;
 import com.stockdemy.infra.marketdata.dto.QuoteItem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -29,8 +30,9 @@ public class YahooMarketDataProvider implements MarketDataProvider {
 
   private static final String INTERVAL_DAILY = "1d";
   private static final String INTERVAL_MINUTE = "1m";
-  private static final String RANGE_QUOTE = "5d";
-  private static final String RANGE_TODAY = "1d";
+
+  // chartPreviousClose는 조회 구간 시작 직전 종가라서, 전일 종가가 되려면 구간이 최근 1거래일이어야 한다
+  private static final String RANGE_LATEST_SESSION = "1d";
 
   private final RestClient restClient = RestClient.builder()
     .baseUrl(BASE_URL)
@@ -41,26 +43,9 @@ public class YahooMarketDataProvider implements MarketDataProvider {
   @Override
   public Optional<QuoteItem> fetchQuote(String stockCode, String market) {
 
-    ChartResult result = fetchChart(toSymbol(stockCode, market), INTERVAL_DAILY, RANGE_QUOTE, null, null);
+    ChartResult result = fetchChart(toSymbol(stockCode, market), INTERVAL_DAILY, RANGE_LATEST_SESSION, null, null);
 
-    if (result == null || result.meta() == null || result.meta().regularMarketPrice() == null) {
-      return Optional.empty();
-    }
-
-    ChartMeta meta = result.meta();
-    double price = meta.regularMarketPrice();
-    double previousClose = resolvePreviousClose(meta, price);
-
-    return Optional.of(QuoteItem.builder()
-      .stockCode(stockCode)
-      .price(price)
-      .previousClose(previousClose)
-      .changePercent(resolveChangePercent(meta, price, previousClose))
-      .volume(meta.regularMarketVolume() == null ? 0L : meta.regularMarketVolume())
-      .week52High(meta.fiftyTwoWeekHigh() == null ? 0 : meta.fiftyTwoWeekHigh())
-      .week52Low(meta.fiftyTwoWeekLow() == null ? 0 : meta.fiftyTwoWeekLow())
-      .quotedAt(LocalDateTime.now())
-      .build());
+    return toQuote(stockCode, result);
   }
 
   // 일봉 조회
@@ -75,13 +60,13 @@ public class YahooMarketDataProvider implements MarketDataProvider {
     return toBars(result, false);
   }
 
-  // 당일 분봉 조회
+  // 당일 시세 + 분봉 조회
   @Override
-  public List<BarItem> fetchMinuteBars(String stockCode, String market) {
+  public Optional<IntradayItem> fetchIntraday(String stockCode, String market) {
 
-    ChartResult result = fetchChart(toSymbol(stockCode, market), INTERVAL_MINUTE, RANGE_TODAY, null, null);
+    ChartResult result = fetchChart(toSymbol(stockCode, market), INTERVAL_MINUTE, RANGE_LATEST_SESSION, null, null);
 
-    return toBars(result, true);
+    return toQuote(stockCode, result).map(quote -> new IntradayItem(quote, toBars(result, true)));
   }
 
   // 지수·환율 조회
@@ -92,7 +77,7 @@ public class YahooMarketDataProvider implements MarketDataProvider {
 
     for (MarketIndexType type : MarketIndexType.values()) {
 
-      ChartResult result = fetchChart(type.getYahooSymbol(), INTERVAL_DAILY, RANGE_QUOTE, null, null);
+      ChartResult result = fetchChart(type.getYahooSymbol(), INTERVAL_DAILY, RANGE_LATEST_SESSION, null, null);
 
       if (result == null || result.meta() == null || result.meta().regularMarketPrice() == null) {
         continue;
@@ -151,6 +136,29 @@ public class YahooMarketDataProvider implements MarketDataProvider {
       log.warn("Yahoo 시세 조회 실패 (symbol={}): {}", symbol, e.getMessage());
       return null;
     }
+  }
+
+  // 응답 meta → 현재가
+  private Optional<QuoteItem> toQuote(String stockCode, ChartResult result) {
+
+    if (result == null || result.meta() == null || result.meta().regularMarketPrice() == null) {
+      return Optional.empty();
+    }
+
+    ChartMeta meta = result.meta();
+    double price = meta.regularMarketPrice();
+    double previousClose = resolvePreviousClose(meta, price);
+
+    return Optional.of(QuoteItem.builder()
+      .stockCode(stockCode)
+      .price(price)
+      .previousClose(previousClose)
+      .changePercent(resolveChangePercent(meta, price, previousClose))
+      .volume(meta.regularMarketVolume() == null ? 0L : meta.regularMarketVolume())
+      .week52High(meta.fiftyTwoWeekHigh() == null ? 0 : meta.fiftyTwoWeekHigh())
+      .week52Low(meta.fiftyTwoWeekLow() == null ? 0 : meta.fiftyTwoWeekLow())
+      .quotedAt(LocalDateTime.now())
+      .build());
   }
 
   // 봉 배열 변환
