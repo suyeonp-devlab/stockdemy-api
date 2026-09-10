@@ -22,10 +22,16 @@ public class DartDisclosureProvider implements DisclosureProvider {
   private static final DateTimeFormatter DATE_PARAM_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
   private static final int RECENT_DAYS = 5;
 
+  // DART 1회 조회 최대 건수
+  private static final int PAGE_COUNT = 100;
+
+  // 추적 종목이 유가증권시장이라 해당 시장 공시만 조회
+  private static final String CORP_CLS_KOSPI = "Y";
+
   private final String apiKey;
   private final RestClient restClient = RestClient.builder().baseUrl(BASE_URL).build();
 
-  // 최근 공시 조회
+  // 유가증권시장 최근 공시 조회
   @Override
   public List<DisclosureItem> fetchRecent() {
 
@@ -40,7 +46,8 @@ public class DartDisclosureProvider implements DisclosureProvider {
         .queryParam("crtfc_key", apiKey)
         .queryParam("bgn_de", today.minusDays(RECENT_DAYS).format(DATE_PARAM_FORMAT))
         .queryParam("end_de", today.format(DATE_PARAM_FORMAT))
-        .queryParam("page_count", 30)
+        .queryParam("corp_cls", CORP_CLS_KOSPI)
+        .queryParam("page_count", PAGE_COUNT)
         .toUriString();
 
       DartListResponse response = restClient.get().uri(url).retrieve().body(DartListResponse.class);

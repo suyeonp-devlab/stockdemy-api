@@ -3,11 +3,13 @@ package com.stockdemy.domain.stock.controller;
 import com.stockdemy.domain.stock.dto.FavoriteRequest;
 import com.stockdemy.domain.stock.dto.MinuteBarItem;
 import com.stockdemy.domain.stock.dto.PriceBarItem;
+import com.stockdemy.domain.stock.dto.StockDisclosureItem;
 import com.stockdemy.domain.stock.dto.StockFundamentalsResponse;
 import com.stockdemy.domain.stock.dto.StockListResponse;
 import com.stockdemy.domain.stock.dto.StockQuoteItem;
 import com.stockdemy.domain.stock.dto.StockSearchRequest;
 import com.stockdemy.domain.stock.dto.TodayQuoteResponse;
+import com.stockdemy.domain.stock.service.StockDisclosureService;
 import com.stockdemy.domain.stock.service.StockService;
 import com.stockdemy.domain.stock.service.StockTodayService;
 import com.stockdemy.global.response.ApiResponse;
@@ -37,6 +39,7 @@ public class StockController {
 
   private final StockService stockService;
   private final StockTodayService stockTodayService;
+  private final StockDisclosureService stockDisclosureService;
 
   @Operation(summary = "종목 목록 조회")
   @GetMapping
@@ -51,6 +54,14 @@ public class StockController {
     @RequestParam(required = false) List<String> codes
   ) {
     return ResponseEntity.ok(ApiResponse.success(stockService.getStockQuotes(codes)));
+  }
+
+  @Operation(summary = "공시 조회")
+  @GetMapping("/disclosures")
+  public ResponseEntity<ApiResponse<List<StockDisclosureItem>>> getDisclosures(
+    @RequestParam(required = false) String stockCode
+  ) {
+    return ResponseEntity.ok(ApiResponse.success(stockDisclosureService.getDisclosures(stockCode)));
   }
 
   @Operation(summary = "종목 기초데이터 조회")
