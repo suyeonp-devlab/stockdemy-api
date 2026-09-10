@@ -13,6 +13,5 @@ public record QuoteItem(
   long volume,
   double week52High,
   double week52Low,
-  boolean marketOpen,
   LocalDateTime quotedAt) {
 }

@@ -59,7 +59,6 @@ public class YahooMarketDataProvider implements MarketDataProvider {
       .volume(meta.regularMarketVolume() == null ? 0L : meta.regularMarketVolume())
       .week52High(meta.fiftyTwoWeekHigh() == null ? 0 : meta.fiftyTwoWeekHigh())
       .week52Low(meta.fiftyTwoWeekLow() == null ? 0 : meta.fiftyTwoWeekLow())
-      .marketOpen(isMarketOpen(meta))
       .quotedAt(LocalDateTime.now())
       .build());
   }
@@ -224,24 +223,6 @@ public class YahooMarketDataProvider implements MarketDataProvider {
     return previousClose == 0 ? 0 : (price - previousClose) / previousClose * 100;
   }
 
-  // 정규장 운영 구간 판정 (서머타임·시장별 운영시간이 응답에 반영되어 있다)
-  private boolean isMarketOpen(ChartMeta meta) {
-
-    if (meta.currentTradingPeriod() == null || meta.currentTradingPeriod().regular() == null) {
-      return false;
-    }
-
-    TradingPeriod regular = meta.currentTradingPeriod().regular();
-
-    if (regular.start() == null || regular.end() == null) {
-      return false;
-    }
-
-    long now = Instant.now().getEpochSecond();
-
-    return now >= regular.start() && now < regular.end();
-  }
-
   private <T> T valueAt(List<T> values, int index) {
     return values == null || index >= values.size() ? null : values.get(index);
   }
@@ -267,16 +248,7 @@ public class YahooMarketDataProvider implements MarketDataProvider {
     Long regularMarketVolume,
     Double fiftyTwoWeekHigh,
     Double fiftyTwoWeekLow,
-    ChartTradingPeriod currentTradingPeriod,
     String exchangeTimezoneName) {
-  }
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public record ChartTradingPeriod(TradingPeriod regular) {
-  }
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public record TradingPeriod(Long start, Long end) {
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)

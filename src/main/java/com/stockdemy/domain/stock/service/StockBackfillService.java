@@ -4,6 +4,7 @@ import com.stockdemy.domain.stock.entity.PriceBar;
 import com.stockdemy.domain.stock.entity.Stock;
 import com.stockdemy.domain.stock.repository.PriceBarRepository;
 import com.stockdemy.domain.stock.repository.StockRepository;
+import com.stockdemy.domain.stock.support.MarketSession;
 import com.stockdemy.infra.marketdata.MarketDataProvider;
 import com.stockdemy.infra.marketdata.dto.BarItem;
 import com.stockdemy.infra.marketdata.dto.QuoteItem;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,7 +72,19 @@ public class StockBackfillService {
       return;
     }
 
-    List<BarItem> bars = marketDataProvider.fetchDailyBars(stockCode, market, days);
+    Optional<MarketSession> session = MarketSession.of(market);
+
+    if (session.isEmpty()) {
+      log.warn("장 운영 정보가 없는 시장입니다 (stockCode={}, market={})", stockCode, market);
+      return;
+    }
+
+    // 종가 확정 전 봉은 이후 보정되지 않으므로 제외한다 (해당 봉은 장마감 배치가 적재)
+    Instant now = Instant.now();
+
+    List<BarItem> bars = marketDataProvider.fetchDailyBars(stockCode, market, days).stream()
+      .filter(bar -> session.get().isSettled(bar.date(), now))
+      .toList();
 
     if (bars.isEmpty()) {
       log.warn("일봉 조회 결과 없음 (stockCode={})", stockCode);

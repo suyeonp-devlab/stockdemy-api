@@ -19,7 +19,12 @@ jwt:
 # 주식 데이터
 market-data:
   provider: dummy
-  sync-interval-ms: 5000
+  sync-interval-ms: 30000           # 장중 시세 갱신 사이클 종료 후 대기
+  sync-initial-delay-ms: 60000      # 기동 직후 초기 적재와 겹치지 않도록 지연
+  call-interval-ms: 250             # Yahoo 연속 호출 간격
+  close:                            # MarketSession.settleTime(종가 확정 시각)과 맞출 것
+    krx-cron: "0 10 18 * * MON-FRI"     # KRX 장마감 처리 (Asia/Seoul, 지연 시세 확정 이후)
+    nasdaq-cron: "0 30 16 * * MON-FRI"  # NASDAQ 장마감 처리 (America/New_York)
   fund-sync-interval-ms: 86400000   # 1일
   fund-refresh-hours: 24
 

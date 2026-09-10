@@ -47,7 +47,6 @@ public class DummyMarketDataProvider implements MarketDataProvider {
       .volume(baseVolume(stockCode))
       .week52High(round(previousClose * (1.15 + random.nextDouble() * 0.35), market))
       .week52Low(round(previousClose * (0.6 + random.nextDouble() * 0.3), market))
-      .marketOpen(isMarketOpen(market))
       .quotedAt(LocalDateTime.now())
       .build());
   }
@@ -165,18 +164,6 @@ public class DummyMarketDataProvider implements MarketDataProvider {
   private double tickDrift(String key) {
     long bucket = Instant.now().getEpochSecond() / TICK_SECONDS;
     return (seeded(key, bucket).nextDouble() - 0.5) * 0.03;
-  }
-
-  // 정규장 운영 여부 (NASDAQ도 서버 로컬시간 기준으로 판정하는 개발용 근사)
-  private boolean isMarketOpen(String market) {
-
-    if (isWeekend(LocalDate.now())) return false;
-
-    LocalTime now = LocalTime.now();
-    LocalTime open = MARKET_NASDAQ.equals(market) ? US_OPEN : KRX_OPEN;
-    LocalTime close = MARKET_NASDAQ.equals(market) ? US_CLOSE : KRX_CLOSE;
-
-    return !now.isBefore(open) && now.isBefore(close);
   }
 
   // 주말이면 직전 금요일
