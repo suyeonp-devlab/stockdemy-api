@@ -4,19 +4,20 @@ import lombok.Builder;
 
 import java.util.List;
 
+/** 종목 분석 입력 (수집하지 못한 값은 null → 프롬프트에서 "정보 없음") */
 @Builder
 public record StockAnalysisRequest(
   String stockCode,
   String stockName,
   String marketName,
   String sectorName,
-  double lastPrice,
-  double lastChangePercent,
-  double week52High,
-  double week52Low,
-  double per,
-  double sectorPer,
-  double pbr,
-  long marketCap,
-  List<String> newsSourceUrls) {
+  Double lastPrice,
+  Double lastChangePercent,
+  Double week52High,
+  Double week52Low,
+  Double per,
+  Double sectorPer,
+  Double pbr,
+  Long marketCap,
+  List<StockNewsDigest> recentNews) {
 }

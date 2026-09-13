@@ -15,6 +15,7 @@ public record StockFundamentalsResponse(
   String sentimentNm,
   boolean favorite,
   String aiComment,
+  String aiAnalyzedAt,
   Double prevClose,
   Double week52High,
   Double week52Low,

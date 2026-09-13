@@ -69,7 +69,7 @@ public class NewsCollectService {
   @Value("${news.max-related-stocks}")
   private int maxRelatedStocks;
 
-  @Value("${news.ai-interval-ms}")
+  @Value("${ai.call-interval-ms}")
   private long aiIntervalMs;
 
   // 전체 추적 종목 뉴스 수집 (저장 건수 반환)

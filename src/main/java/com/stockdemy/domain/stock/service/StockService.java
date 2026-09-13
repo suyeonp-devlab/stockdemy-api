@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.stockdemy.global.util.DateTimeUtil.toCompactDateTime;
 import static com.stockdemy.global.util.NumberUtil.round2;
 
 @Slf4j
@@ -163,6 +164,7 @@ public class StockService {
       .sentimentNm(codeService.getCodeName(SENTIMENT_GROUP, stock.getSentiment()))
       .favorite(favorite)
       .aiComment(stock.getAiComment())
+      .aiAnalyzedAt(toCompactDateTime(stock.getAiAnalyzedAt()))
       .prevClose(round2(stock.getPrevClose()))
       .week52High(round2(stock.getWeek52High()))
       .week52Low(round2(stock.getWeek52Low()))

@@ -72,6 +72,9 @@ public class Stock extends BaseTimeEntity {
   // AI 코멘트
   private String aiComment;
 
+  // AI 분석 최근 시각
+  private LocalDateTime aiAnalyzedAt;
+
   // 최근 동기화 현재가
   private Double lastPrice;
 

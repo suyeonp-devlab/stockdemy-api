@@ -21,6 +21,7 @@ public class GeminiAiClient implements AiClient {
 
   private static final String BASE_URL = "https://generativelanguage.googleapis.com";
   private static final String ENDPOINT_PATH = "/v1beta/models/{model}:generateContent?key={key}";
+  private static final String UNKNOWN = "정보 없음";
 
   private final String apiKey;
   private final String model;
@@ -127,22 +128,18 @@ public class GeminiAiClient implements AiClient {
            );
   }
 
-  // AI 종목 분석 프롬프트
+  // AI 종목 분석 프롬프트 (수집하지 못한 값을 0으로 넘기면 "PER 0배"로 오판하므로 "정보 없음"으로 넘긴다)
   private String buildStockPrompt(StockAnalysisRequest request) {
 
-    // 52주 레인지
-    double range = request.week52High() - request.week52Low();
-    double rangePosition = range <= 0 ? 50 : (request.lastPrice() - request.week52Low()) / range * 100;
-
-    List<String> newsSourceUrls = request.newsSourceUrls();
-    String newsPart = newsSourceUrls == null || newsSourceUrls.isEmpty() ? "없음"
-      : newsSourceUrls.stream()
-          .map(url -> "- " + url)
+    List<StockNewsDigest> recentNews = request.recentNews();
+    String newsPart = recentNews == null || recentNews.isEmpty() ? "없음"
+      : recentNews.stream()
+          .map(news -> "- %s [%s] %s: %s".formatted(news.publishedDate(), news.sentimentName(), news.title(), news.summary()))
           .collect(Collectors.joining("\n"));
 
     return """
-                당신은 한국 주식 시장 분석가입니다. 아래 종목 정보를 바탕으로 JSON으로만 답하세요. JSON 앞뒤로 다른 설명은 절대 붙이지 마세요.
-                통화 단위(원/달러)는 [시장] 값을 보고 판단하세요.
+                당신은 주식 시장 분석가입니다. 아래 종목 정보를 바탕으로 JSON으로만 답하세요. JSON 앞뒤로 다른 설명은 절대 붙이지 마세요.
+                통화 단위(원/달러)는 [시장] 값을 보고 판단하세요. "정보 없음"인 항목은 판단 근거로 쓰지 말고 값을 추정하지도 마세요.
 
                 [기본정보]
                 종목 코드: %s
@@ -152,16 +149,16 @@ public class GeminiAiClient implements AiClient {
 
                 [최근 동향]
                 현재가: %s
-                등락률: %s%%
+                등락률: %s
                 52주 최고가: %s / 52주 최저가: %s
-                52주 레인지 내 위치: 하위 %.0f%% 지점 (0%%면 52주 최저가, 100%%면 52주 최고가)
+                52주 레인지 내 위치: %s
 
                 [밸류에이션]
-                개별 PER: %s배 (업종평균 PER: %s배)
-                개별 PBR: %s배
+                개별 PER: %s (업종평균 PER: %s)
+                개별 PBR: %s
                 시가총액: %s
 
-                [참고 뉴스 원본 URL — 실제로 열어서 내용을 확인하고 판단에 반영할 것. 열지 못하면 그 사실을 감안해 아래 수치 위주로 판단]
+                [최근 7일 뉴스 AI 요약 (최신순, 형식: 날짜 [감성] 제목: 요약)]
                 %s
 
                 판단 가이드: PER/PBR은 업종평균·자체 밸류에이션 대비로, 52주 레인지 위치와 등락률은 단기 모멘텀 참고로만 반영하세요.
@@ -170,14 +167,42 @@ public class GeminiAiClient implements AiClient {
                 다음 JSON 형식으로만 답하세요.
                 {
                   "sentiment": "POSITIVE 또는 NEUTRAL 또는 NEGATIVE 중 하나",
-                  "aiComment": "투자 참고용 코멘트 2~5문장, 마지막 문장에 투자 판단은 본인 책임이라는 취지를 담을 것"
+                  "aiComment": "투자 참고용 코멘트 2~5문장, 존댓말(~습니다체), 마지막 문장에 투자 판단은 본인 책임이라는 취지를 담을 것"
                 }
            """.formatted(
              request.stockCode(), request.stockName(), request.marketName(), request.sectorName(),
-             request.lastPrice(), request.lastChangePercent(), request.week52High(), request.week52Low(),
-             rangePosition, request.per(), request.sectorPer(), request.pbr(), request.marketCap(),
+             orUnknown(request.lastPrice(), ""), orUnknown(request.lastChangePercent(), "%"),
+             orUnknown(request.week52High(), ""), orUnknown(request.week52Low(), ""),
+             rangePosition(request),
+             orUnknown(request.per(), "배"), orUnknown(request.sectorPer(), "배"), orUnknown(request.pbr(), "배"),
+             orUnknown(request.marketCap(), ""),
              newsPart
            );
+  }
+
+  // 52주 레인지 내 위치
+  private String rangePosition(StockAnalysisRequest request) {
+
+    Double price = request.lastPrice();
+    Double high = request.week52High();
+    Double low = request.week52Low();
+
+    if (price == null || high == null || low == null || high <= low) return UNKNOWN;
+
+    return "하위 %.0f%% 지점 (0%%면 52주 최저가, 100%%면 52주 최고가)".formatted((price - low) / (high - low) * 100);
+  }
+
+  // 값이 없으면 "정보 없음", 있으면 불필요한 소수점을 뺀 숫자 + 단위
+  private String orUnknown(Number value, String unit) {
+
+    if (value == null) return UNKNOWN;
+
+    double number = value.doubleValue();
+    String text = number == Math.rint(number)
+      ? String.valueOf((long) number)
+      : String.valueOf(Math.round(number * 100) / 100.0);
+
+    return text + unit;
   }
 
   // AI 일지 복기 프롬프트

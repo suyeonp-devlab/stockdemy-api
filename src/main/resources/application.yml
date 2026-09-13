@@ -11,7 +11,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 4                     # 장중 시세, 장마감 배치, 지수 갱신, 뉴스 수집이 서로 기다리지 않도록
+        size: 5                     # 장중 시세, 장마감 배치, 지수 갱신, 뉴스 수집, 종목 분석이 서로 기다리지 않도록
 
 server:
   port: 8080
@@ -31,15 +31,12 @@ market-data:
   close:                            # MarketSession.settleTime(종가 확정 시각)과 맞출 것
     krx-cron: "0 10 18 * * MON-FRI"     # KRX 장마감 처리 (Asia/Seoul, 지연 시세 확정 이후)
     nasdaq-cron: "0 30 16 * * MON-FRI"  # NASDAQ 장마감 처리 (America/New_York)
-  fund-sync-interval-ms: 86400000   # 1일
-  fund-refresh-hours: 24
 
 # 뉴스 수집 (언론사 RSS → AI 분석)
 news:
   per-stock-limit: 1          # 종목당 AI 분석·저장 건수 (Gemini 무료 한도 고려)
   recent-hours: 48            # 수집 대상 발행 시간 범위, 초기 수집 생략 판단 기준
   max-related-stocks: 4       # 뉴스당 관련 종목 최대 건수
-  ai-interval-ms: 6000        # Gemini 연속 호출 간격 (분당 호출 한도 회피)
 
 # DART API (공시)
 dart:
@@ -47,7 +44,11 @@ dart:
 
 # Gemini API
 ai:
-  daily-limit: 20                 # 무료 티어 모델당 하루 호출 한도 (뉴스 분석·종목 분석·일지 복기 공용)
+  call-interval-ms: 6000          # Gemini 연속 호출 간격 (분당 호출 한도 회피)
+  daily-limit:                    # 무료 티어는 모델당 하루 20건 → 용도별로 나눔 (합계 20 이하 유지)
+    news: 8
+    stock: 7
+    journal: 5                    # 사용자가 요청하는 일지 복기 예약분
   gemini:
     api-key: ${GEMINI_API_KEY:}
     model: gemini-3.6-flash
@@ -61,3 +62,5 @@ resend:
 schedule:
   news: # 매일 07시 뉴스 수집
     cron: "0 0 7 * * *"
+  stock-analysis: # 매일 07시 30분 종목 AI 분석 (뉴스 수집 이후)
+    cron: "0 30 7 * * *"
