@@ -39,6 +39,8 @@ public class GeminiAiClient implements AiClient {
     try {
       String responseText = callGemini(buildNewsPrompt(request));
       return Optional.of(objectMapper.readValue(extractJson(responseText), NewsAnalysisResponse.class));
+    } catch (AiQuotaExceededException e) {
+      throw e;
     } catch (Exception e) {
       log.error("Gemini 뉴스 분석 실패: {}", e.getMessage());
       return Optional.empty();
@@ -57,6 +59,8 @@ public class GeminiAiClient implements AiClient {
     try {
       String responseText = callGemini(buildStockPrompt(request));
       return Optional.of(objectMapper.readValue(extractJson(responseText), StockAnalysisResponse.class));
+    } catch (AiQuotaExceededException e) {
+      throw e;
     } catch (Exception e) {
       log.error("Gemini 종목 분석 실패: {}", e.getMessage());
       return Optional.empty();
@@ -75,6 +79,8 @@ public class GeminiAiClient implements AiClient {
     try {
       String aiComment = callGemini(buildJournalPrompt(request)).trim();
       return Optional.of(aiComment);
+    } catch (AiQuotaExceededException e) {
+      throw e;
     } catch (Exception e) {
       log.error("Gemini 일지 복기 실패: {}", e.getMessage());
       return Optional.empty();
@@ -104,13 +110,14 @@ public class GeminiAiClient implements AiClient {
 
                 다음 JSON 형식으로만 답하세요.
                 {
-                  "summary": "뉴스 내용을 최대 10문장 이내로 자체 요약",
+                  "summary": "뉴스 내용을 3~5문장으로 자체 요약. 원문 표현을 그대로 옮기지 말고 직접 다시 쓸 것",
                   "sentiment": "POSITIVE 또는 NEUTRAL 또는 NEGATIVE 중 하나",
                   "confidence": 0에서 100 사이 정수,
                   "reasoning": "그렇게 판단한 근거를 5문장 이내로",
                   "relatedStocks": [{"stockCode": "후보 중 실제 연관있는 종목코드", "impact": "BENEFIT 또는 LIMITED 또는 ADVERSE"}]
                 }
            
+                summary와 reasoning은 모두 존댓말(~습니다체)로 작성하세요.
                 confidence는 sentiment를 판단한 확신 수준을 의미합니다.
                 relatedStocks의 impact는 동반 수혜(BENEFIT), 제한적 영향(LIMITED), 동반 약세(ADVERSE) 중 하나입니다.
                 relatedStocks는 실제로 뉴스와 연관성이 뚜렷한 경우에만 최대 4개까지 포함하고, 없으면 빈 배열로 답하세요.
@@ -210,6 +217,10 @@ public class GeminiAiClient implements AiClient {
       .contentType(MediaType.APPLICATION_JSON)
       .body(body)
       .retrieve()
+      // 한도 초과(429)는 남은 대상을 시도해도 모두 실패하므로 호출 측이 멈출 수 있게 구분해 던진다
+      .onStatus(status -> status.value() == 429, (req, res) -> {
+        throw new AiQuotaExceededException("Gemini 호출 한도 초과 (model=" + model + ")");
+      })
       .body(GeminiResponse.class);
 
     if (response == null || response.candidates() == null || response.candidates().isEmpty()) {

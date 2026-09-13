@@ -36,6 +36,10 @@ public class Stock extends BaseTimeEntity {
   @Column(length = 20)
   private String sentiment;
 
+  // 뉴스 검색어 (비어 있으면 종목명 사용)
+  @Column(length = 100)
+  private String searchKeyword;
+
   // 전일 종가
   private Double prevClose;
 
@@ -85,6 +89,11 @@ public class Stock extends BaseTimeEntity {
 
   // 펀더멘털 최근 수집 시각
   private LocalDateTime fundSyncedAt;
+
+  // 뉴스 검색에 사용할 키워드
+  public String newsKeyword() {
+    return searchKeyword == null || searchKeyword.isBlank() ? stockName : searchKeyword;
+  }
 
   // 시세 동기화 결과 반영
   public void applyQuote(

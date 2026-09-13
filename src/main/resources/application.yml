@@ -11,7 +11,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 3                     # 장중 시세, 장마감 배치, 지수 갱신이 서로 기다리지 않도록
+        size: 4                     # 장중 시세, 장마감 배치, 지수 갱신, 뉴스 수집이 서로 기다리지 않도록
 
 server:
   port: 8080
@@ -34,20 +34,23 @@ market-data:
   fund-sync-interval-ms: 86400000   # 1일
   fund-refresh-hours: 24
 
+# 뉴스 수집 (언론사 RSS → AI 분석)
+news:
+  per-stock-limit: 1          # 종목당 AI 분석·저장 건수 (Gemini 무료 한도 고려)
+  recent-hours: 48            # 수집 대상 발행 시간 범위, 초기 수집 생략 판단 기준
+  max-related-stocks: 4       # 뉴스당 관련 종목 최대 건수
+  ai-interval-ms: 6000        # Gemini 연속 호출 간격 (분당 호출 한도 회피)
+
 # DART API (공시)
 dart:
   api-key: ${DART_API_KEY:}
 
-# 네이버 뉴스 API
-naver:
-  client-id: ${NAVER_CLIENT_ID:}
-  client-secret: ${NAVER_CLIENT_SECRET:}
-
 # Gemini API
 ai:
+  daily-limit: 20                 # 무료 티어 모델당 하루 호출 한도 (뉴스 분석·종목 분석·일지 복기 공용)
   gemini:
     api-key: ${GEMINI_API_KEY:}
-    model: gemini-2.5-flash
+    model: gemini-3.6-flash
 
 # Resend
 resend:
