@@ -11,7 +11,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 5                     # 장중 시세, 장마감 배치, 지수 갱신, 뉴스 수집, 종목 분석이 서로 기다리지 않도록
+        size: 6                     # 장중 시세, 장마감 배치, 지수 갱신, 뉴스 수집, 종목 분석, 일지 복기가 서로 기다리지 않도록
 
 server:
   port: 8080
@@ -37,6 +37,11 @@ news:
   per-stock-limit: 1          # 종목당 AI 분석·저장 건수 (Gemini 무료 한도 고려)
   recent-hours: 48            # 수집 대상 발행 시간 범위, 초기 수집 생략 판단 기준
   max-related-stocks: 4       # 뉴스당 관련 종목 최대 건수
+
+# 주식 일지 AI 복기
+journal:
+  review-interval-ms: 3600000       # 복기 대기열 처리 주기 (1시간, 처리 종료 후 대기)
+  review-initial-delay-ms: 60000    # 기동 직후 재기동 전 남은 요청 처리
 
 # DART API (공시)
 dart:

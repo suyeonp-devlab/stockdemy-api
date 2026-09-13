@@ -31,6 +31,17 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     Pageable pageable
   );
 
+  // 기간 내 종목 뉴스 (주체 종목이거나 관련 종목으로 엮인 뉴스, 최신순, 종료 시각 미포함)
+  @Query("SELECT n FROM News n WHERE n.publishedAt >= :from AND n.publishedAt < :to AND (n.stockCode = :stockCode "
+    + "OR n.newsId IN (SELECT r.newsId FROM NewsRelatedStock r WHERE r.stockCode = :stockCode)) "
+    + "ORDER BY n.publishedAt DESC, n.newsId DESC")
+  List<News> findByStockBetween(
+    @Param("stockCode") String stockCode,
+    @Param("from") LocalDateTime from,
+    @Param("to") LocalDateTime to,
+    Pageable pageable
+  );
+
   // 기간 내 감성별 뉴스 건수
   @Query("SELECT n.sentiment AS sentiment, COUNT(n) AS count FROM News n WHERE n.publishedAt >= :from GROUP BY n.sentiment")
   List<SentimentCount> countBySentimentSince(@Param("from") LocalDateTime from);
