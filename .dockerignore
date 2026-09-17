@@ -1,0 +1,34 @@
+# gradle / 빌드 결과물
+.gradle
+build
+out
+bin
+
+# IDE
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+
+# 로그
+logs
+
+# env files / 로컬 설정
+.env*
+src/main/resources/application-local.yml
+
+# 배포 설정 (이미지에 포함할 필요 없음)
+deploy
+docker-compose*.yml
+
+# Docker 관련
+Dockerfile
+.dockerignore
+
+# git / CI 메타데이터
+.git
+.gitignore
+.gitattributes
+.github
+HELP.md

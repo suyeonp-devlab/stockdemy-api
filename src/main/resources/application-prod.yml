@@ -3,6 +3,8 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5    # t3.micro + Postgres max_connections 20 기준
   jpa:
     hibernate:
       ddl-auto: validate

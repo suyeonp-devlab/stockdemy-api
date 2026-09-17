@@ -44,6 +44,10 @@ public class AuthService {
   @Value("${jwt.refresh-token-validity-seconds}")
   private long refreshTokenValiditySeconds;
 
+  // HTTPS가 아닌 환경에서는 브라우저가 Secure 쿠키를 저장하지 않아 환경별로 설정
+  @Value("${jwt.refresh-cookie-secure:true}")
+  private boolean refreshCookieSecure;
+
   public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
   private static final Duration SEND_CODE_COOLDOWN = Duration.ofSeconds(60);   // 연속 발송 최소 간격
   private static final int SEND_CODE_MAX_PER_HOUR = 5;                         // 시간당 최대 발송 횟수
@@ -216,7 +220,7 @@ public class AuthService {
   public ResponseCookie refreshTokenCookie(String token) {
     return ResponseCookie.from(REFRESH_TOKEN_COOKIE, token)
       .httpOnly(true)
-      .secure(true)
+      .secure(refreshCookieSecure)
       .sameSite("Strict")
       .path("/")
       .maxAge(refreshTokenValiditySeconds)
@@ -227,7 +231,7 @@ public class AuthService {
   public ResponseCookie expiredRefreshTokenCookie() {
     return ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
       .httpOnly(true)
-      .secure(true)
+      .secure(refreshCookieSecure)
       .sameSite("Strict")
       .path("/")
       .maxAge(0)

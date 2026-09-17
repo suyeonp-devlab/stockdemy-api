@@ -19,6 +19,7 @@ server:
 jwt:
   access-token-validity-seconds: 1800       # 30분
   refresh-token-validity-seconds: 1209600   # 14일
+  refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:true}   # HTTP 운영 환경에서만 false
 
 # 주식 데이터
 market-data:
